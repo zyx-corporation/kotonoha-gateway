@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kotonoha Gateway API
-  version: 0.1.0
+  version: 0.1.1
   description: |
     HTTP wrapper delegating to the `kotonoha` CLI (same tool names as kotonoha-mcp).
     Normative UX: https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/chatgpt-app/04_mcp_tools_and_ux.md

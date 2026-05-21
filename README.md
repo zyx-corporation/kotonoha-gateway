@@ -67,6 +67,24 @@ Same names and CLI mapping as `kotonoha-mcp` — see [README in kotonoha-mcp](ht
 | `KOTONOHA_WORKDIR` | `cwd` | Git repo root |
 | `DATABASE_URL` | — | Required for agent/review tools |
 
+## E2E (Pattern A + human review)
+
+Equivalent to [`m5_mcp_e2e`](https://github.com/zyx-corporation/kotonoha-mcp/blob/main/scripts/m5_mcp_e2e.ts):
+
+```bash
+export DATABASE_URL="postgres://..."
+export KOTONOHA_BIN="../kotonoha-cli/target/release/kotonoha"
+export KOTONOHA_WORKDIR="../kotonoha-cli"
+npm run test:e2e
+# or: ./scripts/m5_gateway_e2e.sh
+```
+
+Spawns the gateway, runs steps 1–8 over HTTP (step 7 agent deny via CLI). CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+## Deployment
+
+See [`docs/deploy.md`](docs/deploy.md).
+
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).

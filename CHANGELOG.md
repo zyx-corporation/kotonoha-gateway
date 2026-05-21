@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-05-21
+
+- M5 HTTP E2E (`npm run test:e2e`) — Pattern A + human `kotonoha_review_approve` (#137 P2-4)
+- Deployment notes: [`docs/deploy.md`](docs/deploy.md)
+- CI: Postgres + full gateway E2E
+
 ## 0.1.0 — 2026-05-21
 
 - Initial scaffold (M5-P2 / #137 P2-1 + P2-2)

@@ -10,7 +10,7 @@ export type GatewayConfig = {
   rateLimitPerMinute: number;
 };
 
-export const GATEWAY_VERSION = "0.1.0";
+export const GATEWAY_VERSION = "0.1.1";
 
 export function loadConfig(): GatewayConfig {
   const port = Number(process.env.PORT ?? "8787");
