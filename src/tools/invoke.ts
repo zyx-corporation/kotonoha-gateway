@@ -19,6 +19,7 @@ import {
 } from "../rde-summary.js";
 import { toolResultFromHumanReview } from "../review-human.js";
 import { HUMAN_REVIEW_WIDGET_URI, RDE_SUMMARY_WIDGET_URI } from "../widget-uris.js";
+import { m6ChildEnv, type M6InvokeContext } from "../m6-context.js";
 import { isToolName, type ToolName } from "./catalog.js";
 
 const uuid = z.string().uuid();
@@ -36,16 +37,18 @@ export class ToolInvokeError extends Error {
 export async function invokeTool(
   name: string,
   body: Record<string, unknown>,
+  m6?: M6InvokeContext,
 ): Promise<ToolResultPayload> {
   if (!isToolName(name)) {
     throw new ToolInvokeError(`Unknown tool: ${name}`, 404);
   }
-  return dispatch(name, body);
+  return dispatch(name, body, m6);
 }
 
 async function dispatch(
   name: ToolName,
   body: Record<string, unknown>,
+  m6?: M6InvokeContext,
 ): Promise<ToolResultPayload> {
   switch (name) {
     case "kotonoha_ping":
@@ -136,7 +139,7 @@ async function dispatch(
       if (input.external_ref) {
         args.push("--external-ref", input.external_ref);
       }
-      const result = await runKotonoha({ args });
+      const result = await runKotonoha({ args, env: m6ChildEnv(m6) });
       if (result.exitCode === 0) {
         return toolResultFromCli(result, { agent_run_id: result.stdout.trim() });
       }
@@ -162,11 +165,12 @@ async function dispatch(
           await withTempJsonFile(input.output_artifacts_json, (path) =>
             runKotonoha({
               args: [...args, "--output-artifacts", path],
+              env: m6ChildEnv(m6),
             }),
           ),
         );
       }
-      return toolResultFromCli(await runKotonoha({ args }));
+      return toolResultFromCli(await runKotonoha({ args, env: m6ChildEnv(m6) }));
     }
 
     case "kotonoha_meaning_delta_from_run": {
@@ -203,6 +207,7 @@ async function dispatch(
           runKotonoha({
             args: [...args, "--observation", obsPath],
             cwd: input.repo_path,
+            env: m6ChildEnv(m6),
           }),
         );
         if (result.exitCode === 0) {
@@ -212,7 +217,11 @@ async function dispatch(
         }
         return toolResultFromCli(result);
       }
-      const result = await runKotonoha({ args, cwd: input.repo_path });
+      const result = await runKotonoha({
+        args,
+        cwd: input.repo_path,
+        env: m6ChildEnv(m6),
+      });
       if (result.exitCode === 0) {
         return toolResultFromCli(result, {
           meaning_delta_id: result.stdout.trim(),
@@ -240,7 +249,11 @@ async function dispatch(
       if (input.strict) {
         args.push("--strict");
       }
-      const result = await runKotonoha({ args, stdin: input.rde_json });
+      const result = await runKotonoha({
+        args,
+        stdin: input.rde_json,
+        env: m6ChildEnv(m6),
+      });
       const assessmentExtra =
         result.exitCode === 0
           ? { rde_assessment_id: result.stdout.trim() }
@@ -327,6 +340,7 @@ async function dispatch(
           })
           .parse(body),
         HUMAN_REVIEW_WIDGET_URI,
+        m6ChildEnv(m6),
       );
 
     case "kotonoha_review_hold":
@@ -341,6 +355,7 @@ async function dispatch(
           })
           .parse(body),
         HUMAN_REVIEW_WIDGET_URI,
+        m6ChildEnv(m6),
       );
 
     case "kotonoha_review_reject":
@@ -355,6 +370,7 @@ async function dispatch(
           })
           .parse(body),
         HUMAN_REVIEW_WIDGET_URI,
+        m6ChildEnv(m6),
       );
 
     default: {

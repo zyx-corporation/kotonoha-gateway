@@ -66,6 +66,10 @@ Same names and CLI mapping as `kotonoha-mcp` — see [README in kotonoha-mcp](ht
 | `KOTONOHA_BIN` | `kotonoha` | CLI binary |
 | `KOTONOHA_WORKDIR` | `cwd` | Git repo root |
 | `DATABASE_URL` | — | Required for agent/review tools |
+| `KOTONOHA_GATEWAY_API_KEY_PRINCIPALS` | *(empty)* | `key=uuid,key2=uuid2` — map API key → principal (M6) |
+| `KOTONOHA_GATEWAY_DEFAULT_PRINCIPAL_ID` | legacy principal UUID | Fallback when key not mapped |
+| `KOTONOHA_GATEWAY_DEFAULT_PROJECT_ID` | legacy project UUID | Passed to CLI as `KOTONOHA_PROJECT_ID` |
+| `KOTONOHA_PRINCIPAL_ID` / `KOTONOHA_PROJECT_ID` | — | Set on child CLI for agent/delta/review/rde (inherited from gateway resolution) |
 
 ## E2E (Pattern A + human review)
 

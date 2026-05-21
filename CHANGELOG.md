@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 — 2026-05-21
+
+- **M6-c** ([#138](https://github.com/zyx-corporation/kotonoha-management/issues/138)): API key → principal mapping; `KOTONOHA_PRINCIPAL_ID` / `KOTONOHA_PROJECT_ID` on CLI child env for agent, delta, review, rde tools.
+
 ## 0.1.1 — 2026-05-21
 
 - M5 HTTP E2E (`npm run test:e2e`) — Pattern A + human `kotonoha_review_approve` (#137 P2-4)
