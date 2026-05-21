@@ -33,20 +33,6 @@ export function parseApiKeyPrincipals(raw: string): Map<string, string> {
   return map;
 }
 
-export function resolvePrincipalForApiKey(
-  apiKey: string | null,
-  map: Map<string, string>,
-  defaultPrincipalId: string | null,
-): string | undefined {
-  if (apiKey && map.has(apiKey)) {
-    return map.get(apiKey);
-  }
-  if (defaultPrincipalId?.trim()) {
-    return defaultPrincipalId.trim();
-  }
-  return undefined;
-}
-
 /** Env vars for child `kotonoha` CLI processes (M6-c). */
 export function m6ChildEnv(m6?: M6InvokeContext): NodeJS.ProcessEnv | undefined {
   if (!m6?.principalId && !m6?.projectId) {

@@ -1,0 +1,10 @@
+{
+  "version": "kotonoha.gateway_principals.v0.1",
+  "bindings": [
+    {
+      "api_key": "REPLACE_WITH_GATEWAY_API_KEY",
+      "principal_id": "00000000-0000-4000-8000-000000000001",
+      "project_id": "00000000-0000-4000-8000-000000000002"
+    }
+  ]
+}

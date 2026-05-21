@@ -1,5 +1,5 @@
 /**
- * HTTP server — /health, /v1/tools/{name}, OpenAPI redirect (M5-P2).
+ * HTTP server — /health, /v1/tools/{name}, OpenAPI redirect (M5-P2, M6-d audit).
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -7,8 +7,14 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { resolveBindingForApiKey } from "./api-key-bindings.js";
+import {
+  apiKeyFingerprint,
+  writeAuditLog,
+  type GatewayAuditEvent,
+} from "./audit-log.js";
 import { authRequired, extractApiKey, isAuthorized } from "./auth.js";
-import { resolvePrincipalForApiKey, type M6InvokeContext } from "./m6-context.js";
+import type { M6InvokeContext } from "./m6-context.js";
 import { GATEWAY_VERSION, type GatewayConfig } from "./config.js";
 import { sendJson, readJsonBody } from "./http/respond.js";
 import { checkRateLimit } from "./rate-limit.js";
@@ -21,6 +27,25 @@ const here = dirname(fileURLToPath(import.meta.url));
 function loadOpenApiYaml(): string {
   const path = join(here, "..", "openapi", "openapi.yaml");
   return readFileSync(path, "utf8");
+}
+
+function remoteAddr(req: IncomingMessage): string | undefined {
+  const fwd = req.headers["x-forwarded-for"];
+  if (typeof fwd === "string" && fwd.length > 0) {
+    return fwd.split(",")[0]!.trim();
+  }
+  return req.socket.remoteAddress ?? undefined;
+}
+
+function audit(
+  config: GatewayConfig,
+  partial: Omit<GatewayAuditEvent, "schema" | "ts">,
+): void {
+  writeAuditLog(config.auditLogSink, {
+    schema: "kotonoha.gateway_audit.v0.1",
+    ts: new Date().toISOString(),
+    ...partial,
+  });
 }
 
 export function startServer(config: GatewayConfig): void {
@@ -43,6 +68,8 @@ export function startServer(config: GatewayConfig): void {
     console.log(
       `  auth=${authRequired(config.apiKeys) ? "required" : "disabled (set KOTONOHA_GATEWAY_API_KEYS)"}`,
     );
+    console.log(`  audit_log=${config.auditLogSink}`);
+    console.log(`  api_key_bindings=${config.apiKeyBindings.size}`);
   });
 }
 
@@ -78,7 +105,22 @@ async function handleRequest(
 
   const toolMatch = path.match(/^\/v1\/tools\/([a-z0-9_]+)$/);
   if (method === "POST" && toolMatch) {
+    const started = Date.now();
+    const apiKey = extractApiKey(req);
+    const apiKeyFp = apiKey ? apiKeyFingerprint(apiKey) : undefined;
+    const addr = remoteAddr(req);
+
     if (!isAuthorized(req, config.apiKeys)) {
+      audit(config, {
+        event: "auth_denied",
+        method,
+        path,
+        tool: toolMatch[1],
+        api_key_fp: apiKeyFp,
+        http_status: 401,
+        duration_ms: Date.now() - started,
+        remote_addr: addr,
+      });
       sendJson(res, 401, {
         error: "unauthorized",
         message: "Provide Authorization: Bearer <key> or X-Api-Key",
@@ -86,9 +128,27 @@ async function handleRequest(
       return;
     }
 
-    const rateKey = extractApiKey(req) ?? req.socket.remoteAddress ?? "anonymous";
+    const rateKey = apiKey ?? req.socket.remoteAddress ?? "anonymous";
     const rate = checkRateLimit(rateKey, config.rateLimitPerMinute);
     if (!rate.allowed) {
+      const { principalId, projectId } = resolveBindingForApiKey(
+        apiKey,
+        config.apiKeyBindings,
+        config.defaultPrincipalId,
+        config.defaultProjectId,
+      );
+      audit(config, {
+        event: "rate_limited",
+        method,
+        path,
+        tool: toolMatch[1],
+        principal_id: principalId,
+        project_id: projectId,
+        api_key_fp: apiKeyFp,
+        http_status: 429,
+        duration_ms: Date.now() - started,
+        remote_addr: addr,
+      });
       sendJson(
         res,
         429,
@@ -102,6 +162,26 @@ async function handleRequest(
     try {
       body = await readJsonBody(req);
     } catch (err) {
+      const { principalId, projectId } = resolveBindingForApiKey(
+        apiKey,
+        config.apiKeyBindings,
+        config.defaultPrincipalId,
+        config.defaultProjectId,
+      );
+      audit(config, {
+        event: "tool_error",
+        method,
+        path,
+        tool: toolMatch[1],
+        principal_id: principalId,
+        project_id: projectId,
+        api_key_fp: apiKeyFp,
+        ok: false,
+        http_status: 400,
+        duration_ms: Date.now() - started,
+        error_kind: "invalid_body",
+        remote_addr: addr,
+      });
       sendJson(res, 400, {
         error: "invalid_body",
         message: err instanceof Error ? err.message : String(err),
@@ -110,28 +190,71 @@ async function handleRequest(
     }
 
     const toolName = toolMatch[1]!;
-    const apiKey = extractApiKey(req);
+    const { principalId, projectId } = resolveBindingForApiKey(
+      apiKey,
+      config.apiKeyBindings,
+      config.defaultPrincipalId,
+      config.defaultProjectId,
+    );
     const m6: M6InvokeContext = {
-      principalId: resolvePrincipalForApiKey(
-        apiKey,
-        config.apiKeyPrincipals,
-        config.defaultPrincipalId,
-      ),
-      projectId: config.defaultProjectId ?? undefined,
+      principalId,
+      projectId,
     };
     try {
       const result = await invokeTool(toolName, body, m6);
+      const ok = !result.isError;
+      audit(config, {
+        event: "tool_invoke",
+        method,
+        path,
+        tool: toolName,
+        principal_id: principalId,
+        project_id: projectId,
+        api_key_fp: apiKeyFp,
+        ok,
+        http_status: 200,
+        duration_ms: Date.now() - started,
+        remote_addr: addr,
+      });
       sendJson(res, 200, {
         tool: toolName,
-        ok: !result.isError,
+        ok,
         result,
       });
     } catch (err) {
       if (err instanceof ToolInvokeError) {
+        audit(config, {
+          event: "tool_error",
+          method,
+          path,
+          tool: toolName,
+          principal_id: principalId,
+          project_id: projectId,
+          api_key_fp: apiKeyFp,
+          ok: false,
+          http_status: err.status,
+          duration_ms: Date.now() - started,
+          error_kind: "tool_error",
+          remote_addr: addr,
+        });
         sendJson(res, err.status, { error: "tool_error", message: err.message });
         return;
       }
       if (err instanceof Error && err.name === "ZodError") {
+        audit(config, {
+          event: "tool_error",
+          method,
+          path,
+          tool: toolName,
+          principal_id: principalId,
+          project_id: projectId,
+          api_key_fp: apiKeyFp,
+          ok: false,
+          http_status: 400,
+          duration_ms: Date.now() - started,
+          error_kind: "validation_error",
+          remote_addr: addr,
+        });
         sendJson(res, 400, { error: "validation_error", message: err.message });
         return;
       }
