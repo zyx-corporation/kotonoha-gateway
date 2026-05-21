@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 — 2026-05-21
+
+- **M6-d** ([#138](https://github.com/zyx-corporation/kotonoha-management/issues/138)): structured audit log (`kotonoha.gateway_audit.v0.1`) with `principal_id` / `project_id`; `KOTONOHA_GATEWAY_API_KEY_PRINCIPALS_FILE`; per-key `KOTONOHA_GATEWAY_API_KEY_PROJECTS`; [`docs/m6-production.md`](docs/m6-production.md).
+
 ## 0.1.2 — 2026-05-21
 
 - **M6-c** ([#138](https://github.com/zyx-corporation/kotonoha-management/issues/138)): API key → principal mapping; `KOTONOHA_PRINCIPAL_ID` / `KOTONOHA_PROJECT_ID` on CLI child env for agent, delta, review, rde tools.

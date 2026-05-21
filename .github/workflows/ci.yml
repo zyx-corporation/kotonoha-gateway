@@ -53,5 +53,6 @@ jobs:
           npm ci
           npm run build
           npm run contract:cli-only
+          npm run test:unit
           npm run test:cli
           npm run test:e2e

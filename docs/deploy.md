@@ -20,8 +20,16 @@
 | `KOTONOHA_BIN` | no | `kotonoha` | CLI binary path |
 | `KOTONOHA_WORKDIR` | yes (agent flow) | `cwd` | Git repository root |
 | `DATABASE_URL` | yes (agent flow) | — | PostgreSQL connection string |
+| `KOTONOHA_GATEWAY_API_KEY_PRINCIPALS` | M6 prod | — | `key=principal-uuid,...` |
+| `KOTONOHA_GATEWAY_API_KEY_PROJECTS` | M6 prod | — | `key=project-uuid,...` |
+| `KOTONOHA_GATEWAY_API_KEY_PRINCIPALS_FILE` | M6 prod | — | JSON bindings file (see [`m6-production.md`](m6-production.md)) |
+| `KOTONOHA_GATEWAY_DEFAULT_PRINCIPAL_ID` | no | legacy UUID | Fallback principal |
+| `KOTONOHA_GATEWAY_DEFAULT_PROJECT_ID` | no | legacy UUID | Fallback project |
+| `KOTONOHA_GATEWAY_AUDIT_LOG` | no | `stderr` if keys set | `stderr` \| `stdout` \| `off` |
 
 **Never** expose the gateway without `KOTONOHA_GATEWAY_API_KEYS` in production.
+
+**M6 Team Mode:** see [`m6-production.md`](m6-production.md) for API key → principal mapping and audit log schema.
 
 ## TLS and reverse proxy
 
