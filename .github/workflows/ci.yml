@@ -1,0 +1,39 @@
+name: Gateway CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: zyx-corporation/kotonoha-cli
+          path: kotonoha-cli
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build kotonoha CLI
+        working-directory: kotonoha-cli
+        run: cargo build --release
+
+      - name: npm ci, build, contract, CLI smoke
+        env:
+          KOTONOHA_BIN: ${{ github.workspace }}/kotonoha-cli/target/release/kotonoha
+        run: |
+          npm ci
+          npm run build
+          npm run contract:cli-only
+          npm run test:cli

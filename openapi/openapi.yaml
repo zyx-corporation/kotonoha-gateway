@@ -1,0 +1,81 @@
+openapi: 3.1.0
+info:
+  title: Kotonoha Gateway API
+  version: 0.1.0
+  description: |
+    HTTP wrapper delegating to the `kotonoha` CLI (same tool names as kotonoha-mcp).
+    Normative UX: https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/chatgpt-app/04_mcp_tools_and_ux.md
+servers:
+  - url: http://127.0.0.1:8787
+    description: Local default (PORT)
+paths:
+  /health:
+    get:
+      summary: Liveness and CLI reachability
+      security: []
+      responses:
+        "200":
+          description: OK
+  /v1/tools:
+    get:
+      summary: List registered tool names
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Tool catalog
+        "401":
+          description: Missing or invalid API key (when keys configured)
+  /v1/tools/{toolName}:
+    post:
+      summary: Invoke a Kotonoha tool (CLI delegation)
+      parameters:
+        - name: toolName
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - kotonoha_ping
+              - kotonoha_context_export
+              - kotonoha_rde_validate
+              - kotonoha_agent_record_start
+              - kotonoha_agent_record_complete
+              - kotonoha_meaning_delta_from_run
+              - kotonoha_rde_attach
+              - kotonoha_copy_human_review_command
+              - kotonoha_prepare_human_review
+              - kotonoha_review_approve
+              - kotonoha_review_hold
+              - kotonoha_review_reject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Tool result (MCP-compatible payload in `result`)
+        "400":
+          description: Invalid body or Zod validation
+        "401":
+          description: Unauthorized
+        "404":
+          description: Unknown tool name
+        "429":
+          description: Rate limited
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key

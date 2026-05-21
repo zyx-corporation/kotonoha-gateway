@@ -1,0 +1,36 @@
+{
+  "name": "kotonoha-gateway",
+  "version": "0.1.0",
+  "description": "HTTP gateway for Kotonoha — delegates to the kotonoha CLI (M5-P2)",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zyx-corporation/kotonoha-gateway.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test:cli": "node --import tsx/esm src/kotonoha.test.ts",
+    "test:health": "node --import tsx/esm scripts/health_check.ts",
+    "contract:cli-only": "bash scripts/contract-cli-only.sh",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "kotonoha",
+    "gateway",
+    "http",
+    "semantic-lineage"
+  ],
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

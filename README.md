@@ -1,0 +1,72 @@
+# kotonoha-gateway
+
+**HTTP gateway** for the Kotonoha ecosystem. Exposes the same tool names as [`kotonoha-mcp`](https://github.com/zyx-corporation/kotonoha-mcp) and delegates to the official [`kotonoha`](https://github.com/zyx-corporation/kotonoha-cli) CLI.
+
+**Track:** [#137](https://github.com/zyx-corporation/kotonoha-management/issues/137) · Plan: [`34_kotonoha_gateway_plan_draft.md`](https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/34_kotonoha_gateway_plan_draft.md)
+
+**Normative UX:** [`04_mcp_tools_and_ux.md`](https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/chatgpt-app/04_mcp_tools_and_ux.md)
+
+## Requirements
+
+- **Node.js** ≥ 18
+- **`kotonoha`** 0.2.7+ on `PATH`, or **`KOTONOHA_BIN`**
+- DB tools: **`DATABASE_URL`** + `kotonoha db migrate`
+- **`KOTONOHA_WORKDIR`**: Git repository root
+
+## Quickstart
+
+```bash
+npm install && npm run build
+export KOTONOHA_BIN="../kotonoha-cli/target/release/kotonoha"
+export KOTONOHA_WORKDIR="../kotonoha-cli"
+export DATABASE_URL="postgres://..."
+# Optional: export KOTONOHA_GATEWAY_API_KEYS="dev-secret"
+npm start
+```
+
+Default listen: `http://127.0.0.1:8787`
+
+```bash
+curl -s http://127.0.0.1:8787/health | jq .
+curl -s -X POST http://127.0.0.1:8787/v1/tools/kotonoha_ping \
+  -H 'Content-Type: application/json' -d '{}' | jq .
+```
+
+With API keys configured:
+
+```bash
+curl -s -X POST http://127.0.0.1:8787/v1/tools/kotonoha_ping \
+  -H "Authorization: Bearer dev-secret" \
+  -H 'Content-Type: application/json' -d '{}'
+```
+
+## HTTP API
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/health` | — | Liveness + CLI probe |
+| `GET` | `/v1/tools` | if keys set | Tool catalog |
+| `POST` | `/v1/tools/{name}` | if keys set | Invoke tool (JSON body = MCP args) |
+| `GET` | `/openapi.yaml` | — | OpenAPI 3.1 spec |
+
+## Tools (12)
+
+Same names and CLI mapping as `kotonoha-mcp` — see [README in kotonoha-mcp](https://github.com/zyx-corporation/kotonoha-mcp#mcp-tools).
+
+**Security:** Only [`src/kotonoha.ts`](src/kotonoha.ts) spawns the CLI — [`docs/gateway-contract.md`](docs/gateway-contract.md), `npm run contract:cli-only`.
+
+## Environment
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `8787` | Listen port |
+| `HOST` | `127.0.0.1` | Bind address |
+| `KOTONOHA_GATEWAY_API_KEYS` | *(empty)* | Comma-separated keys; empty = auth off (dev) |
+| `KOTONOHA_GATEWAY_RATE_LIMIT` | `60` | Requests per minute per key |
+| `KOTONOHA_BIN` | `kotonoha` | CLI binary |
+| `KOTONOHA_WORKDIR` | `cwd` | Git repo root |
+| `DATABASE_URL` | — | Required for agent/review tools |
+
+## License
+
+Apache-2.0 — see [LICENSE](LICENSE).
