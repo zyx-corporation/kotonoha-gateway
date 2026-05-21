@@ -8,8 +8,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-contract:
+  build-contract-e2e:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kotonoha
+          POSTGRES_PASSWORD: kotonoha
+          POSTGRES_DB: kotonoha_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kotonoha -d kotonoha_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://kotonoha:kotonoha@localhost:5432/kotonoha_test
     steps:
       - uses: actions/checkout@v4
 
@@ -29,11 +45,13 @@ jobs:
         working-directory: kotonoha-cli
         run: cargo build --release
 
-      - name: npm ci, build, contract, CLI smoke
+      - name: npm ci, build, contract, smoke, E2E
         env:
           KOTONOHA_BIN: ${{ github.workspace }}/kotonoha-cli/target/release/kotonoha
+          KOTONOHA_WORKDIR: ${{ github.workspace }}/kotonoha-cli
         run: |
           npm ci
           npm run build
           npm run contract:cli-only
           npm run test:cli
+          npm run test:e2e
