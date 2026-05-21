@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { authRequired, extractApiKey, isAuthorized } from "./auth.js";
+import { resolvePrincipalForApiKey, type M6InvokeContext } from "./m6-context.js";
 import { GATEWAY_VERSION, type GatewayConfig } from "./config.js";
 import { sendJson, readJsonBody } from "./http/respond.js";
 import { checkRateLimit } from "./rate-limit.js";
@@ -109,8 +110,17 @@ async function handleRequest(
     }
 
     const toolName = toolMatch[1]!;
+    const apiKey = extractApiKey(req);
+    const m6: M6InvokeContext = {
+      principalId: resolvePrincipalForApiKey(
+        apiKey,
+        config.apiKeyPrincipals,
+        config.defaultPrincipalId,
+      ),
+      projectId: config.defaultProjectId ?? undefined,
+    };
     try {
-      const result = await invokeTool(toolName, body);
+      const result = await invokeTool(toolName, body, m6);
       sendJson(res, 200, {
         tool: toolName,
         ok: !result.isError,

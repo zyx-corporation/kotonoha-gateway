@@ -1,6 +1,6 @@
 {
   "name": "kotonoha-gateway",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "HTTP gateway for Kotonoha — delegates to the kotonoha CLI (M5-P2)",
   "type": "module",
   "license": "Apache-2.0",

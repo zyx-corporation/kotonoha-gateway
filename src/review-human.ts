@@ -45,6 +45,7 @@ export function runHumanReviewCli(
     decided_by?: string;
     rationale_json?: string;
   },
+  extraEnv?: NodeJS.ProcessEnv,
 ): Promise<RunKotonohaResult> {
   const args = ["review", kind, "--delta-id", input.delta_id];
   if (input.assessment_id) {
@@ -56,7 +57,7 @@ export function runHumanReviewCli(
 
   const runOpts: RunKotonohaOptions = {
     args,
-    env: buildHumanReviewEnv(),
+    env: buildHumanReviewEnv(extraEnv),
   };
 
   if (input.rationale_json?.trim()) {
@@ -133,9 +134,10 @@ export function toolResultFromHumanReview(
     rationale_json?: string;
   },
   widgetUri?: string,
+  extraEnv?: NodeJS.ProcessEnv,
 ): Promise<ToolResultPayload> {
   const decidedBy = input.decided_by?.trim() || "human";
-  return runHumanReviewCli(kind, { ...input, decided_by: decidedBy }).then((cli) => {
+  return runHumanReviewCli(kind, { ...input, decided_by: decidedBy }, extraEnv).then((cli) => {
     if (cli.exitCode === 2 && cli.stderr.includes("denied_actions")) {
       return toolResultFromCli(cli, {
         hint_en: i18n.autonomousReviewDeniedEn,

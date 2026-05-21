@@ -17,6 +17,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { TOOL_NAMES } from "../src/tools/catalog.js";
+import {
+  LEGACY_DEFAULT_PRINCIPAL_ID,
+  LEGACY_DEFAULT_PROJECT_ID,
+} from "../src/m6-context.js";
 import { exitCodeLabel, resolveKotonohaBin, runKotonoha } from "../src/kotonoha.js";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -118,6 +122,8 @@ function startGatewayServer(
       KOTONOHA_WORKDIR: workdir,
       DATABASE_URL: databaseUrl,
       KOTONOHA_GATEWAY_API_KEYS: E2E_API_KEY,
+      KOTONOHA_GATEWAY_API_KEY_PRINCIPALS: `${E2E_API_KEY}=${LEGACY_DEFAULT_PRINCIPAL_ID}`,
+      KOTONOHA_GATEWAY_DEFAULT_PROJECT_ID: LEGACY_DEFAULT_PROJECT_ID,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
