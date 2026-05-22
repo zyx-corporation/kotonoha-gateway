@@ -4,7 +4,7 @@
 
 **Track:** [#137](https://github.com/zyx-corporation/kotonoha-management/issues/137) · Plan: [`34_kotonoha_gateway_plan_draft.md`](https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/34_kotonoha_gateway_plan_draft.md)
 
-**Normative UX:** [`04_mcp_tools_and_ux.md`](https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/chatgpt-app/04_mcp_tools_and_ux.md)
+**Product UX contract:** [`04_mcp_tools_and_ux.md`](https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/chatgpt-app/04_mcp_tools_and_ux.md) — implementation guidance; not a replacement for `kotonoha-spec` normative SLS documents.
 
 ## Requirements
 
