@@ -9,7 +9,7 @@
 ## Requirements
 
 - **Node.js** ≥ 18
-- **`kotonoha`** 0.2.7+ on `PATH`, or **`KOTONOHA_BIN`**
+- **`kotonoha`** 0.2.9+ on `PATH`, or **`KOTONOHA_BIN`**
 - DB tools: **`DATABASE_URL`** + `kotonoha db migrate`
 - **`KOTONOHA_WORKDIR`**: Git repository root
 
