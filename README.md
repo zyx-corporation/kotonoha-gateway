@@ -6,6 +6,8 @@
 
 **Product UX contract:** [`04_mcp_tools_and_ux.md`](https://github.com/zyx-corporation/kotonoha-management/blob/main/docs/chatgpt-app/04_mcp_tools_and_ux.md) — implementation guidance; not a replacement for `kotonoha-spec` normative SLS documents.
 
+**Expansion boundary:** [`docs/expansion-boundary.md`](docs/expansion-boundary.md) — canonical: [`kotonoha-spec` `mcp-gateway-expansion-boundary.md`](https://github.com/zyx-corporation/kotonoha-spec/blob/main/docs/mcp-gateway-expansion-boundary.md).
+
 ## Requirements
 
 - **Node.js** ≥ 18
