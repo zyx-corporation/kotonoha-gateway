@@ -237,7 +237,7 @@ async function main(): Promise<void> {
     assert.equal(badPayload.exit_label, exitCodeLabel(2));
     console.log("ok: exit 2 mapped to HTTP client");
 
-    const rdeJson = emit.stdout;
+    let rdeJson = emit.stdout;
 
     console.log("--- Step 3: kotonoha_agent_record_start (HTTP) ---");
     const startRes = await gatewayPost("kotonoha_agent_record_start", {
@@ -266,6 +266,19 @@ async function main(): Promise<void> {
     const deltaId = deltaPayload.meaning_delta_id ?? deltaPayload.stdout;
     assert.match(deltaId ?? "", /^[0-9a-f-]{36}$/i);
     console.log(`meaning_delta_id: ${deltaId}`);
+
+    console.log("--- M8: kotonoha_rde_draft (HTTP) ---");
+    const draftRes = await gatewayPost("kotonoha_rde_draft", {
+      delta_id: deltaId,
+    });
+    assert.equal(draftRes.status, 200);
+    assert.equal(draftRes.envelope.ok, true);
+    const draftPayload = parseToolPayload(draftRes.envelope.result);
+    assert.equal(draftPayload.exit_code, 0, JSON.stringify(draftPayload));
+    rdeJson = String(draftPayload.rde_json ?? "");
+    assert.match(rdeJson, /kotonoha:meaning_delta:/);
+    assert.match(rdeJson, /next_update_policy/);
+    console.log("ok: RDE draft generated via HTTP");
 
     console.log("--- Step 5: kotonoha_rde_attach (HTTP) ---");
     const attachRes = await gatewayPost("kotonoha_rde_attach", {
