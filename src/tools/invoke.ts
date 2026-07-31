@@ -90,6 +90,45 @@ async function dispatch(
       );
     }
 
+    case "kotonoha_rde_draft": {
+      const input = z
+        .object({
+          delta_id: uuid,
+          wrap: z.boolean().optional().default(false),
+        })
+        .parse(body);
+      const args = ["rde", "draft", "--delta-id", input.delta_id];
+      if (input.wrap) {
+        args.push("--wrap");
+      }
+      const result = await runKotonoha({
+        args,
+        env: m6ChildEnv(m6),
+      });
+      if (result.exitCode === 0 && !input.wrap) {
+        const summary = parseValidatedRdeSummary(result.stdout);
+        if (summary) {
+          return toolResultWithRdeSummary(
+            result,
+            summary,
+            {
+              rde_json: result.stdout.trimEnd(),
+              boundary_en:
+                "Draft assistance is not approval; validate, attach, then record human review separately.",
+              boundary_ja:
+                "下書き支援は承認ではありません。検証・attach 後、人間レビューを別途記録してください。",
+            },
+            RDE_SUMMARY_WIDGET_URI,
+          );
+        }
+      }
+      return toolResultFromCli(result, {
+        ...(result.exitCode === 0
+          ? { rde_json: result.stdout.trimEnd() }
+          : {}),
+      });
+    }
+
     case "kotonoha_rde_validate": {
       const { rde_json } = z.object({ rde_json: z.string() }).parse(body);
       const result = await runKotonoha({

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **M8** ([management#176](https://github.com/zyx-corporation/kotonoha-management/issues/176)): add HTTP tool `kotonoha_rde_draft`, delegating to `kotonoha rde draft --delta-id`, preserving the draft-assistance / human-review boundary.
+
 ## 0.1.3 — 2026-05-21
 
 - **M6-d** ([#138](https://github.com/zyx-corporation/kotonoha-management/issues/138)): structured audit log (`kotonoha.gateway_audit.v0.1`) with `principal_id` / `project_id`; `KOTONOHA_GATEWAY_API_KEY_PRINCIPALS_FILE`; per-key `KOTONOHA_GATEWAY_API_KEY_PROJECTS`; [`docs/m6-production.md`](docs/m6-production.md).

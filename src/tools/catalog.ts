@@ -5,6 +5,7 @@
 export const TOOL_NAMES = [
   "kotonoha_ping",
   "kotonoha_context_export",
+  "kotonoha_rde_draft",
   "kotonoha_rde_validate",
   "kotonoha_agent_record_start",
   "kotonoha_agent_record_complete",
