@@ -53,7 +53,7 @@ curl -s -X POST http://127.0.0.1:8787/v1/tools/kotonoha_ping \
 
 ## Tools (12)
 
-Same names and CLI mapping as `kotonoha-mcp` — see [README in kotonoha-mcp](https://github.com/zyx-corporation/kotonoha-mcp#mcp-tools).
+Same names and CLI mapping as `kotonoha-mcp` — see [README in kotonoha-mcp](https://github.com/zyx-corporation/kotonoha-mcp#mcp-tools). M8 adds `kotonoha_rde_draft` → `kotonoha rde draft --delta-id` as draft assistance only; human review remains separate.
 
 **Security:** Only [`src/kotonoha.ts`](src/kotonoha.ts) spawns the CLI — [`docs/gateway-contract.md`](docs/gateway-contract.md), `npm run contract:cli-only`.
 
