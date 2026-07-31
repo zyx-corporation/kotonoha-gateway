@@ -91,6 +91,23 @@ function resolveDefaultWorkdir(): string {
   return join(gatewayRoot, "..", "kotonoha-cli");
 }
 
+async function setLegacyProjectRole(databaseUrl: string, role: "agent_runner" | "reviewer"): Promise<void> {
+  const { Client: PgClient } = await import("pg");
+  const client = new PgClient({ connectionString: databaseUrl });
+  await client.connect();
+  try {
+    await client.query(
+      `INSERT INTO project_members (project_id, principal_id, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (project_id, principal_id)
+       DO UPDATE SET role = EXCLUDED.role`,
+      [LEGACY_DEFAULT_PROJECT_ID, LEGACY_DEFAULT_PRINCIPAL_ID, role],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
 async function waitForHealth(timeoutMs = 30_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -145,6 +162,7 @@ async function main(): Promise<void> {
   console.log(`GATEWAY_URL=${baseUrl()}`);
 
   await runKotonoha({ args: ["db", "migrate"], cwd: workdir });
+  await setLegacyProjectRole(databaseUrl, "agent_runner");
 
   const demoRel = process.env.M5_DEMO_FILE?.trim() || "docs/m5_gateway_e2e_scratch.md";
   const demoAbs = join(workdir, demoRel);
@@ -312,6 +330,7 @@ async function main(): Promise<void> {
     console.log("ok: capability deny exit 2");
 
     console.log("--- Step 8: kotonoha_review_approve (HTTP human path) ---");
+    await setLegacyProjectRole(databaseUrl, "reviewer");
     const approveRes = await gatewayPost("kotonoha_review_approve", {
       delta_id: deltaId,
       assessment_id: assessmentId,
